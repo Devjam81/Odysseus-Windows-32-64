@@ -1,0 +1,35 @@
+NOT working: iOS5
+- kloader does not work properly on iOS5.  May be fixed in the future, but
+  until then, there is no way to kickstart this if your device is on iOS5.
+- the baseband for iPhone4,1 is stored differently on iOS5 vs higher iOS
+  versions.  An extra step is needed to prepare baseband.tar
+
+NOT working: El Capitan
+- idevicerestore cannot switch from DFU to Recovery.  Until it gets fixed,
+  there is no way to kickstart this if your computer is running El Capitan.
+
+Do NOT attempt this if you don't know what you are doing.  In case of
+baseband mismatch, there is no way to get past activation screen and
+re-jailbreak the device.  To overcome this, a jailbreak.tar and ssh.tar
+must be preinstalled to rootfs.
+
+iPhone3,1:
+probably ok
+
+iPhone3,3:
+probably ok
+
+iPhone4,1:
+6.1.3 -> 7.1.2 ok
+7.1.2 -> 6.1.3 BB mismatch (to succeed with this restore, just use README.OTA)
+8.1.1 -> 6.1.3 BB mismatch (to succeed with this restore, just use README.OTA)
+8.1.1 -> 7.1.2 ok
+
+iPhone5,2:
+8.1.2 -> 7.1.2 ok
+
+iPhone5,4:
+8.1.2 -> 7.1.2 ok
+
+iPad2,1:
+6.1.3 -> 7.1.2 ok

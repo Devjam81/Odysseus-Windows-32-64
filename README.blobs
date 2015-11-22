@@ -1,0 +1,58 @@
+This is a (somewhat) complicated process to dump on-device blobs/apticket).
+
+Install OpenSSH and Core Utilities (coreutils) on the device, using Cydia or
+whatever app store is the rage these days.
+
+Next, build a custom firmware for your device.  It must match your hardware,
+but the actual iOS version is not that important.  The -memory parameter is
+optional, use it only if your machine has sufficient physical memory (>=4GB).
+Make sure you have the right bundle in FirmwareBundles/.
+        computer$ ./ipsw original.ipsw custom.ipsw -memory
+Do NOT use this custom ipsw to restore your device, because it has no saved
+baseband.  See the main README for the proper procedure.
+
+Extract the pwned iBSS from the custom-built firmware:
+        computer$ ./xpwntool `unzip -j custom.ipsw 'Firmware/dfu/iBSS*' | awk '/inflating/{print $2}'` pwnediBSS
+
+Load the pwned iBSS (enter your device root password):
+        computer$ ./sshtool -k ../kloader -b pwnediBSS -p 22 device_ip_or_name
+
+Wait for the device to enter DFU.  Do NOT press any button.  Just plug/unplug
+it, until it is seen as DFU.  If it does not appear, do a cold boot by holding
+both Home and Power button until the Apple logo appears and then repeat the
+previous step.  Kill iTunes before continuing.  You may want to disable iTunes
+Helper by removing it from System Preferences -> Users & Groups -> Login Items
+or simply kill it:
+        computer$ killall iTunesHelper
+
+Extract the pwned iBEC from the custom-built firmware:
+        computer$ mv `unzip -j custom.ipsw 'Firmware/dfu/iBEC*' | awk '/inflating/{print $2}'` pwnediBEC
+
+Load the pwned iBEC:
+        computer# ./irecovery -f pwnediBEC
+
+Wait for the device to enter Recovery Mode.  Do NOT press any button.  Just
+plug/unplug it, until it is seen as Recovery.  If it does not appear, do a
+cold boot by holding both Home and Power button until the Apple logo appears
+and then repeat the previous steps.
+
+Get them blobs:
+        computer# ./irecovery -s
+        iRecovery> /send ../payload
+        iRecovery> go blobs
+        iRecovery> /exit
+        computer# ./irecovery -g precious.dump
+        computer# ./irecovery -s
+        iRecovery> reboot
+
+Unpack blobs against a matching ipsw.  This ipsw must match the actual version
+that is flashed on the device.
+        computer$ ./ticket precious.dump precious.plist matching.ipsw -z
+        computer$ ./validate precious.plist matching.ipsw -z
+
+Credits:
+@westbaer for irecovery
+@winocm for ios-kexec-utils
+@iH8sn0w for some ideas and code
+
+-xerub

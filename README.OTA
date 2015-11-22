@@ -1,0 +1,11 @@
+blah... blah...
+
+./ipsw iPhone4,1_6.1.3_10B329_Restore.ipsw iPhone4,1_6.1.3_10B329_Downgrade.ipsw -memory -bbupdate -ota iPhone4,1_9A406_10B329.plist
+
+blah... blah...
+
+idevicerestore -d -w iPhone4,1_6.1.3_10B329_Downgrade.ipsw
+
+blah... blah...
+
+-xerub

@@ -1,0 +1,91 @@
+Odysseus
+
+WARNING: do not do it, unless you have read and understood these instructions.
+If *anything* goes wrong during the restore process, you will have to restore
+to the latest, most likely unjailbreakable firmware.  Basically, you are on
+your own.  I will not be held responsible for anything YOU do.
+
+This works only on certain jailbroken 32bit devices.  By that, I mean devices
+I have keys for.  Also, this will *not* change your baseband.  If you go too
+far up/down with iOS version, it may be that the main OS doesn't understand
+the baseband anymore.  If that happens, you won't get past activation and
+you cannot re-jailbreak the device.  As a consequence, the device will remain
+in activation limbo and you'll have to restore.
+
+The untether on your device must have tfp0 enabled.  Early versions of Pangu
+did not enable tfp0, but latest versions of Pangu, TaiG and evasi0n all have
+tfp0 activated.
+
+You need to have the valid ticket/blob for the desired firmware.  To validate
+the ticket/blob against the desired firmware, you have to:
+    a) download desired firmware:
+        computer$ curl -O http://path/to/desired.ipsw
+    b) convert your precious.shsh to xml:
+        computer$ cat precious.shsh | zcat -fc > precious.plist
+        computer$ plutil -convert xml1 precious.plist
+    c) validate the ticket/blob:
+        computer$ ./validate precious.plist desired.ipsw -z
+If you see any ERROR message, then your ticket/blob is probably screwed and you
+should NOT attempt to downgrade.
+
+Install OpenSSH and Core Utilities (coreutils) on the device, using Cydia or
+whatever app store is the rage these days.
+
+Save your baseband (enter your device root password, default is alpine):
+        computer$ ./sshtool -s baseband.tar -p 22 device_ip_or_name
+It's ok if baseband.tar is a zero sized file if you have an Infineon baseband
+(that is, <= iPhone4) but for Qualcomm (that is >= iPhone4S), your device must
+have the baseband on main filesystem.  In this case, any error or empty archive
+means trouble.
+
+Build the custom firmware.  This will take a while.  The -memory parameter is
+optional.  Use it only if your machine has sufficient physical memory (>=4GB).
+Make sure you have the right bundle in FirmwareBundles/.  If the bundle is not
+there, ask for it.
+        computer$ ./ipsw desired.ipsw custom.ipsw -memory baseband.tar
+or
+        computer$ ./ipsw desired.ipsw custom.ipsw -memory baseband.tar jb.tar ssh.tar
+The latter is meant to save your device if there's a baseband mismatch.  Do NOT
+attempt to install Cydia (jailbreak or otherwise) over it even if signal works.
+Its sole purpose is to allow you to re-downgrade to a different iOS version.
+If the ipsw creation fails, try increasing rootfs with `-s' or `-S' options.
+
+Extract back the pwned iBSS from the custom-built firmware:
+        computer$ ./xpwntool `unzip -j custom.ipsw 'Firmware/dfu/iBSS*' | awk '/inflating/{print $2}'` pwnediBSS
+
+Kickstart the pwned restore (enter your device root password):
+        computer$ ./sshtool -k ../kloader -b pwnediBSS -p 22 device_ip_or_name
+
+Wait for the device to enter DFU.  Do NOT press any button.  Just plug/unplug
+it, until it is seen as DFU.  If it does not appear, do a cold boot by holding
+both Home and Power button until the Apple logo appears and then repeat the
+previous step.  Kill iTunes before continuing.  You may want to disable iTunes
+Helper by removing it from System Preferences -> Users & Groups -> Login Items
+or simply kill it:
+        computer$ killall iTunesHelper
+
+Restore the custom firmware.  Make sure you have your precious ticket/blob file
+copied as shsh/ECID-DEVICE-VERSION.shsh before starting.  For example, the shsh
+file can be 2144637826347-iPad3,1-7.1.2.shsh.  Please note that you may need to
+be root to access USB:
+        computer# ./idevicerestore -d -w custom.ipsw
+
+Enjoy!
+
+In theory, the last step can be replaced by starting TinyUmbrella and doing the
+restore via iTunes, but I have not tested it that way (and most probably, you'd
+have to downgrade iTunes).
+
+Credits:
+@planetbeing, dborca for the awesome xpwn
+@winocm for ios-kexec-utils
+@westbaer, p0sixninja, iH8sn0w, GreySyntax for irecovery
+@libimobiledevice people for libimobiledevice
+@iH8sn0w for some ideas and code
+@iH8sn0w, SquiffyPwn, winocm for p0sixspwn
+@daytonhasty for some ideas, testing and writeup
+@JonathanSeals for some ideas
+@tihmstar, CPVideoMaker, SashaKirichenko for testing
+@citrusui for the cool name
+
+-xerub
