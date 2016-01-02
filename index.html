@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Odysseus-windows-32-64 by elrhk</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/elrhk/Odysseus-Windows-32-64">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/elrhk/Odysseus-Windows-32-64/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/elrhk/Odysseus-Windows-32-64/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Odysseus-windows-32-64</h1>
+          <p>Setup autoinstall test</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/elrhk">elrhk</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <p>Odysseus</p>
+
+<p>WARNING: do not do it, unless you have read and understood these instructions.
+If <em>anything</em> goes wrong during the restore process, you will have to restore
+to the latest, most likely unjailbreakable firmware.  Basically, you are on
+your own.  I will not be held responsible for anything YOU do.</p>
+
+<p>This works only on certain jailbroken 32bit devices.  By that, I mean devices
+I have keys for.  Also, this will <em>not</em> change your baseband.  If you go too
+far up/down with iOS version, it may be that the main OS doesn't understand
+the baseband anymore.  If that happens, you won't get past activation and
+you cannot re-jailbreak the device.  As a consequence, the device will remain
+in activation limbo and you'll have to restore.</p>
+
+<p>The untether on your device must have tfp0 enabled.  Early versions of Pangu
+did not enable tfp0, but latest versions of Pangu, TaiG and evasi0n all have
+tfp0 activated.</p>
+
+<p>You need to have the valid ticket/blob for the desired firmware.  To validate
+the ticket/blob against the desired firmware, you have to:
+    a) download desired firmware:
+        computer$ curl -O http://path/to/desired.ipsw
+    b) convert your precious.shsh to xml:
+        computer$ cat precious.shsh | zcat -fc &gt; precious.plist
+        computer$ plutil -convert xml1 precious.plist
+    c) validate the ticket/blob:
+        computer$ ./validate precious.plist desired.ipsw -z
+If you see any ERROR message, then your ticket/blob is probably screwed and you
+should NOT attempt to downgrade.</p>
+
+<p>Install OpenSSH and Core Utilities (coreutils) on the device, using Cydia or
+whatever app store is the rage these days.</p>
+
+<p>Save your baseband (enter your device root password, default is alpine):
+        computer$ ./sshtool -s baseband.tar -p 22 device_ip_or_name
+It's ok if baseband.tar is a zero sized file if you have an Infineon baseband
+(that is, &lt;= iPhone4) but for Qualcomm (that is &gt;= iPhone4S), your device must
+have the baseband on main filesystem.  In this case, any error or empty archive
+means trouble.</p>
+
+<p>Build the custom firmware.  This will take a while.  The -memory parameter is
+optional.  Use it only if your machine has sufficient physical memory (&gt;=4GB).
+Make sure you have the right bundle in FirmwareBundles/.  If the bundle is not
+there, ask for it.
+        computer$ ./ipsw desired.ipsw custom.ipsw -memory baseband.tar
+or
+        computer$ ./ipsw desired.ipsw custom.ipsw -memory baseband.tar jb.tar ssh.tar
+The latter is meant to save your device if there's a baseband mismatch.  Do NOT
+attempt to install Cydia (jailbreak or otherwise) over it even if signal works.
+Its sole purpose is to allow you to re-downgrade to a different iOS version.
+If the ipsw creation fails, try increasing rootfs with <code>-s' or</code>-S' options.</p>
+
+<p>Extract back the pwned iBSS from the custom-built firmware:
+        computer$ ./xpwntool <code>unzip -j custom.ipsw 'Firmware/dfu/iBSS*' | awk '/inflating/{print $2}'</code> pwnediBSS</p>
+
+<p>Kickstart the pwned restore (enter your device root password):
+        computer$ ./sshtool -k ../kloader -b pwnediBSS -p 22 device_ip_or_name</p>
+
+<p>Wait for the device to enter DFU.  Do NOT press any button.  Just plug/unplug
+it, until it is seen as DFU.  If it does not appear, do a cold boot by holding
+both Home and Power button until the Apple logo appears and then repeat the
+previous step.  Kill iTunes before continuing.  You may want to disable iTunes
+Helper by removing it from System Preferences -&gt; Users &amp; Groups -&gt; Login Items
+or simply kill it:
+        computer$ killall iTunesHelper</p>
+
+<p>Restore the custom firmware.  Make sure you have your precious ticket/blob file
+copied as shsh/ECID-DEVICE-VERSION.shsh before starting.  For example, the shsh
+file can be 2144637826347-iPad3,1-7.1.2.shsh.  Please note that you may need to
+be root to access USB:
+        computer# ./idevicerestore -d -w custom.ipsw</p>
+
+<p>Enjoy!</p>
+
+<p>In theory, the last step can be replaced by starting TinyUmbrella and doing the
+restore via iTunes, but I have not tested it that way (and most probably, you'd
+have to downgrade iTunes).</p>
+
+<p>Credits:
+<a href="https://github.com/planetbeing" class="user-mention">@planetbeing</a>, dborca for the awesome xpwn
+<a href="https://github.com/winocm" class="user-mention">@winocm</a> for ios-kexec-utils
+<a href="https://github.com/westbaer" class="user-mention">@westbaer</a>, p0sixninja, iH8sn0w, GreySyntax for irecovery
+<a href="https://github.com/libimobiledevice" class="user-mention">@libimobiledevice</a> people for libimobiledevice
+<a href="https://github.com/iH8sn0w" class="user-mention">@iH8sn0w</a> for some ideas and code
+<a href="https://github.com/iH8sn0w" class="user-mention">@iH8sn0w</a>, SquiffyPwn, winocm for p0sixspwn
+@daytonhasty for some ideas, testing and writeup
+<a href="https://github.com/JonathanSeals" class="user-mention">@JonathanSeals</a> for some ideas
+<a href="https://github.com/tihmstar" class="user-mention">@tihmstar</a>, CPVideoMaker, SashaKirichenko for testing
+<a href="https://github.com/citrusui" class="user-mention">@citrusui</a> for the cool name</p>
+
+<p>-xerub</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("odysseus,windows,test,downgrade,beta,elrhk,devjam,youtube,ios,");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
